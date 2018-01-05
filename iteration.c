@@ -1,6 +1,6 @@
 #include "clz.h"
 
-// #if defined(iteration)
+#if defined(iteration)
 // static inline __attribute((always_inline))
 inline __attribute((always_inline))
 
@@ -81,4 +81,4 @@ unsigned clz_uint64(uint64_t x)
     return (n - x);
 }
 
-// #endif
+#endif
