@@ -4,118 +4,161 @@
 #include <stdint.h>
 
 #if defined(recursive)
-#define clz(x) clz2(x, 0)
-static const int mask[] = {0, 8, 12, 14};
-static const int magic[] = {2, 1, 0, 0};
+#define clz(x) _Generic((x), \
+    uint8_t: clz_uint8_rec, \
+    uint16_t: clz_uint16_rec, \
+    uint32_t: clz_uint32_rec, \
+    uint64_t: clz_uint64_rec, \
+    default: clz_uint32_rec \
+)(x,0)
+#else
+#define clz(x) _Generic((x), \
+    uint8_t: clz_uint8, \
+    uint16_t: clz_uint16, \
+    uint32_t: clz_uint32, \
+    uint64_t: clz_uint64, \
+    default: clz_uint32 \
+)(x)
+#endif
+
+
+/*********************
+#if defined(uint8)
+    uint8_t i;
+#elif defined(uint16)
+    uint16_t i;
+#elif defined(uint32)
+    uint32_t i;
+#elif defined(uint64)
+    uint64_t i;
+#endif
+**********************/
+
+
+
+unsigned clz_uint8_rec(uint8_t x, int c);
+unsigned clz_uint16_rec(uint16_t x, int c);
+unsigned clz_uint32_rec(uint32_t x, int c);
+unsigned clz_uint64_rec(uint64_t x, int c);
+
+unsigned clz_uint8(uint8_t x);
+unsigned clz_uint16(uint16_t x);
+unsigned clz_uint32(uint32_t x);
+unsigned clz_uint64(uint64_t x);
+
+// #if defined(recursive)
+// #define clz(x) clz2(x, 0)
+// static const int mask[] = {0, 8, 12, 14};
+// static const int magic[] = {2, 1, 0, 0};
 
 //static inline __attribute((always_inline))
-unsigned clz2(uint32_t x,int c)
-{
+// unsigned clz2(uint32_t x,int c)
+// {
     // *INDENT-OFF*
-    if (!x && !c) return 32;
+    // if (!x && !c) return 32;
 
-    uint32_t upper = (x >> (16 >> c));
-    uint32_t lower = (x & (0xFFFF>>mask[c]));
-    if (c == 3) return upper ? magic[upper] : 2 + magic[lower];
-    return upper ? clz2(upper, c + 1) : (16 >> (c)) + clz2(lower, c + 1);
+    // uint32_t upper = (x >> (16 >> c));
+    // uint32_t lower = (x & (0xFFFF>>mask[c]));
+    // if (c == 3) return upper ? magic[upper] : 2 + magic[lower];
+    // return upper ? clz2(upper, c + 1) : (16 >> (c)) + clz2(lower, c + 1);
     // *INDENT-ON*
-}
+// }
 
-#elif defined(iteration)
+// #elif defined(iteration)
 
-static inline __attribute((always_inline))
-unsigned clz(uint32_t x)
-{
+// static inline __attribute((always_inline))
+// unsigned clz(uint32_t x)
+// {
     // *INDENT-OFF*
-    int n = 32, c = 16;
-    do {
-        uint32_t y = x >> c;
-        if (y) { n -= c; x = y; }
-        c >>= 1;
-    } while (c);
-    return (n - x);
+    // int n = 32, c = 16;
+    // do {
+        // uint32_t y = x >> c;
+        // if (y) { n -= c; x = y; }
+        // c >>= 1;
+    // } while (c);
+    // return (n - x);
     // *INDENT-ON*
-}
+// }
 
-#elif defined(byte)
+// #elif defined(byte)
 
-static inline __attribute((always_inline))
-unsigned clz(uint32_t x)
-{
+// static inline __attribute((always_inline))
+// unsigned clz(uint32_t x)
+// {
     // *INDENT-OFF*
-    if (x == 0) return 32;
-    int n = 1;
-    if ((x >> 16) == 0) { n += 16; x <<= 16; }
-    if ((x >> 24) == 0) { n += 8; x <<= 8; }
-    if ((x >> 28) == 0) { n += 4; x <<= 4; }
-    if ((x >> 30) == 0) { n += 2; x <<= 2; }
-    n = n - (x >> 31);
-    return n;
+    // if (x == 0) return 32;
+    // int n = 1;
+    // if ((x >> 16) == 0) { n += 16; x <<= 16; }
+    // if ((x >> 24) == 0) { n += 8; x <<= 8; }
+    // if ((x >> 28) == 0) { n += 4; x <<= 4; }
+    // if ((x >> 30) == 0) { n += 2; x <<= 2; }
+    // n = n - (x >> 31);
+    // return n;
     // *INDENT-ON*
-}
+// }
 
-#elif defined(binary)
+// #elif defined(binary)
 
-static inline __attribute((always_inline))
-unsigned clz(uint32_t x)
-{
+// static inline __attribute((always_inline))
+// unsigned clz(uint32_t x)
+// {
     // *INDENT-OFF*
-    if (x == 0) return 32;
-    int n = 0;
-    if (x <= 0x0000FFFF) { n += 16; x <<= 16; }
-    if (x <= 0x00FFFFFF) { n += 8; x <<= 8; }
-    if (x <= 0x0FFFFFFF) { n += 4; x <<= 4; }
-    if (x <= 0x3FFFFFFF) { n += 2; x <<= 2; }
-    if (x <= 0x7FFFFFFF) { n += 1; x <<= 1; }
-    return n;
+    // if (x == 0) return 32;
+    // int n = 0;
+    // if (x <= 0x0000FFFF) { n += 16; x <<= 16; }
+    // if (x <= 0x00FFFFFF) { n += 8; x <<= 8; }
+    // if (x <= 0x0FFFFFFF) { n += 4; x <<= 4; }
+    // if (x <= 0x3FFFFFFF) { n += 2; x <<= 2; }
+    // if (x <= 0x7FFFFFFF) { n += 1; x <<= 1; }
+    // return n;
     // *INDENT-ON*
-}
+// }
 
-#elif defined(harley)
+// #elif defined(harley)
 
-static inline __attribute((always_inline))
-unsigned clz(uint32_t x)
-{
-#ifdef CTZ
+// static inline __attribute((always_inline))
+// unsigned clz(uint32_t x)
+// {
+// #ifdef CTZ
     // *INDENT-OFF*
-    static uint8_t const Table[] = {
-        0xFF,    0, 0xFF,   15, 0xFF,    1,   28, 0xFF,
-          16, 0xFF, 0xFF, 0xFF,    2,   21,   29, 0xFF,
-        0xFF, 0xFF,   19,   17,   10, 0xFF,   12, 0xFF,
-        0xFF,    3, 0xFF,    6, 0xFF,   22,   30, 0xFF,
-          14, 0xFF,   27, 0xFF, 0xFF, 0xFF,   20, 0xFF,
-          18,    9,   11, 0xFF,    5, 0xFF, 0xFF,   13,
-          26, 0xFF, 0xFF,    8, 0xFF,    4, 0xFF,   25,
-        0xFF,    7,   24, 0xFF,   23, 0xFF,   31, 0xFF,
-    };
+    // static uint8_t const Table[] = {
+        // 0xFF,    0, 0xFF,   15, 0xFF,    1,   28, 0xFF,
+        //   16, 0xFF, 0xFF, 0xFF,    2,   21,   29, 0xFF,
+        // 0xFF, 0xFF,   19,   17,   10, 0xFF,   12, 0xFF,
+        // 0xFF,    3, 0xFF,    6, 0xFF,   22,   30, 0xFF,
+        //   14, 0xFF,   27, 0xFF, 0xFF, 0xFF,   20, 0xFF,
+        //   18,    9,   11, 0xFF,    5, 0xFF, 0xFF,   13,
+        //   26, 0xFF, 0xFF,    8, 0xFF,    4, 0xFF,   25,
+        // 0xFF,    7,   24, 0xFF,   23, 0xFF,   31, 0xFF,
+    // };
     // *INDENT-ON*
 
-#else
+// #else
     // *INDENT-OFF*
-    static uint8_t const Table[] = {
-        32, 31,  0, 16,  0, 30,  3, 0, 15,  0,  0,  0, 29, 10, 2,  0,
-         0,  0, 12, 14, 21,  0, 19, 0,  0, 28,  0, 25,  0,  9, 1,  0,
-        17,  0,  4,  0,  0,  0, 11, 0, 13, 22, 20,  0, 26,  0, 0, 18,
-         5,  0,  0, 23,  0, 27,  0, 6,  0, 24,  7,  0,  8,  0, 0,  0
-    };
+    // static uint8_t const Table[] = {
+        // 32, 31,  0, 16,  0, 30,  3, 0, 15,  0,  0,  0, 29, 10, 2,  0,
+        //  0,  0, 12, 14, 21,  0, 19, 0,  0, 28,  0, 25,  0,  9, 1,  0,
+        // 17,  0,  4,  0,  0,  0, 11, 0, 13, 22, 20,  0, 26,  0, 0, 18,
+        //  5,  0,  0, 23,  0, 27,  0, 6,  0, 24,  7,  0,  8,  0, 0,  0
+    // };
     // *INDENT-ON*
-#endif
+// #endif
 
-    /* Propagate leftmost 1-bit to the right */
-    x = x | (x >> 1);
-    x = x | (x >> 2);
-    x = x | (x >> 4);
-    x = x | (x >> 8);
-    x = x | (x >> 16);
+/* Propagate leftmost 1-bit to the right */
+// x = x | (x >> 1);
+// x = x | (x >> 2);
+// x = x | (x >> 4);
+// x = x | (x >> 8);
+// x = x | (x >> 16);
 
-    /* x = x * 0x6EB14F9 */
-    x = (x << 3) - x;   /* Multiply by 7. */
-    x = (x << 8) - x;   /* Multiply by 255. */
-    x = (x << 8) - x;   /* Again. */
-    x = (x << 8) - x;   /* Again. */
+/* x = x * 0x6EB14F9 */
+// x = (x << 3) - x;   /* Multiply by 7. */
+// x = (x << 8) - x;   /* Multiply by 255. */
+// x = (x << 8) - x;   /* Again. */
+// x = (x << 8) - x;   /* Again. */
 
-    return Table[(x >> 26)];
-}
-#endif
+// return Table[(x >> 26)];
+// }
+// #endif
 
 #endif

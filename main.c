@@ -7,7 +7,12 @@
 #include <omp.h>
 
 #include "clz.h"
-
+// #define correct 1
+/*
+#define LOG2(X) ((unsigned) \
+    (8 * sizeof (unsigned long long) - \
+     __builtin_clzll((X)) - 1))
+*/
 static inline __attribute__((always_inline))
 void get_cycles(unsigned *high, unsigned *low)
 {
@@ -63,15 +68,15 @@ int main(int argc, char *argv[])
     for (int try = 0; try < 20; try++) {
         timec = 0;
         get_cycles(&timec_high1, &timec_low1);
-        printf("%u:%d \n", 0, clz(0));
-        assert((sizeof(uint32_t) * 8) == clz(0));
+        printf("%u:%d \n", 0, clz((uint32_t)0));
+        assert((sizeof(uint32_t) * 8) == clz((uint32_t)0));
         for (uint32_t i = 0; i < 31; i++) {
-            printf("%u:%d \n", 1 << i, clz(1 << i));
+            printf("input(%u):clz:(%d):log2(%u):%d \n", 1 << i, clz((uint32_t)1 << i),1 << i,(31 - clz((uint32_t)1 << i)));
             for (uint32_t j = (1 << i); j < (1 << (i + 1)); j++) {
                 assert( __builtin_clz (j) == clz(j));
             }
         }
-        printf("%u:%d \n", 1u << 31, clz(1u << 31));
+        printf("input(%u):clz(%d):log2(%u):%d \n", 1u << 31, clz((uint32_t)1u << 31),1u << 31, (31 - clz((uint32_t)1 << 31)));
         for (uint32_t j = (1u << 31); j < UINT32_MAX; j++)
             assert(__builtin_clz(j) == clz(j));
         assert(__builtin_clz(UINT32_MAX) == clz(UINT32_MAX));
@@ -96,8 +101,24 @@ int main(int argc, char *argv[])
 #elif defined(harley)
     output = fopen("harley.txt","a");
 #endif
+
+    /*********************/
+#if defined(uint8)
+    uint8_t i;
+#elif defined(uint16)
+    uint16_t i;
+#elif defined(uint32)
+    uint32_t i;
+#elif defined(uint64)
+    uint64_t i;
+#endif
+    /**********************/
+
+
     uint64_t timecall;
-    for (uint32_t i = min; i < max; i++) {
+    for (i = min; i < max; i++) {
+        // for (uint32_t i = min; i < max; i++) {
+        // for (uint8_t i = min; i < max; i++) {
         timecall = 0;
 #ifdef MP
         #pragma omp parallel for
@@ -112,6 +133,8 @@ int main(int argc, char *argv[])
         time_all += (timecall / 100);
         fprintf(output, "%d %lu cycles\n", i, timecall / 100);
         printf("%d %lu cycles\n", i, timecall / 100);
+        // fprintf(output, "%lu %lu cycles\n", i, timecall / 100);
+        // printf("%lu %lu cycles\n", i, timecall / 100);
     }
 
     fclose(output);
@@ -119,5 +142,6 @@ int main(int argc, char *argv[])
     printf("took %lf million cycles\n", time_all / 1000000.0);
 #endif
 
+// #endif
     return 0;
 }
